@@ -1,0 +1,1 @@
+SELECT bucket_id, bucket_display_name, COUNT(bucket_id), MAX(_id), _data FROM images WHERE ((is_pending=0) AND (is_trashed=0) AND (volume_name IN ( 'external_primary' )) AND (_data>'')) AND (media_type=1 OR media_type=3) GROUP BY (bucket_id) ORDER BY date_modified
