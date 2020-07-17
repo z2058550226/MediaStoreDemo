@@ -1,5 +1,6 @@
 package com.bybutter.mediatest
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ContentUris
 import android.content.Intent
@@ -38,19 +39,27 @@ class ImageListActivity : ListActivity<Image>() {
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
             arrayOf(
                 BaseColumns._ID,
-                MediaStore.MediaColumns.DISPLAY_NAME
+                MediaStore.MediaColumns.DISPLAY_NAME,
+                MediaStore.MediaColumns.SIZE
             ),
-            "${MediaStore.MediaColumns.BUCKET_ID}=?", arrayOf(bucketId.toString()), "${MediaStore.MediaColumns.DATE_ADDED} DESC"
+            "${MediaStore.MediaColumns.BUCKET_ID}=?",
+            arrayOf(bucketId.toString()),
+            "${MediaStore.MediaColumns.DATE_ADDED} DESC"
         )?.use { cursor ->
             dataList.clear()
             while (cursor.moveToNext()) {
                 val idColumnIndex = cursor.getColumnIndex(BaseColumns._ID)
                 val displayNameColumnIndex =
                     cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
+                val sizeColumnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.SIZE)
+
                 val id = cursor.getLong(idColumnIndex)
+                val size = cursor.getLong(sizeColumnIndex)
+
                 dataList += Image(
                     id, cursor.getString(displayNameColumnIndex),
-                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id),
+                    size
                 )
             }
         }
@@ -58,11 +67,12 @@ class ImageListActivity : ListActivity<Image>() {
 
     override val itemLayout = R.layout.item
 
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: VH, position: Int) {
         val tvItem: TextView = holder.itemView.findViewById(R.id.tv_item)
         val ivItem: SimpleDraweeView = holder.itemView.findViewById(R.id.iv_item)
         val image = dataList[position]
-        tvItem.text = image.displayName
+        tvItem.text = "${image.displayName}\n${image.size}"
         ivItem.setImageURI(image.uri)
     }
 }

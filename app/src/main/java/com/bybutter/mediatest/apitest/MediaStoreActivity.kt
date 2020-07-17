@@ -7,35 +7,44 @@ import android.content.ContentValues
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
+import android.database.ContentObserver
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
-import android.graphics.Color
 import android.net.Uri
-import android.os.Build
-import android.os.Bundle
-import android.os.Environment
+import android.os.*
+import android.provider.BaseColumns
 import android.provider.MediaStore
 import android.util.Size
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.bybutter.mediatest.R
 import com.bybutter.mediatest.app
+import io.reactivex.rxjava3.core.Completable
 import kotlinx.android.synthetic.main.activity_media_store.*
 import timber.log.Timber
+import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
 
 class MediaStoreActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_media_store)
+        someTest()
 //        outputAllVolume()
+//        Thread {
 //        createFileByMediaStore()
+//        }.start()
+
+//        createFileByMediaStoreAsync()
 //        val queryUri = queryFileByMediaStore("Image.png")
 //        queryUri?.let { readFileByMediaStore(it) }
 //        queryUri?.let { loadThumbnailByMediaStore(it) }
 
-        modifyFileByMediaStore()
+//        modifyFileByMediaStore()
     }
 
     private val someVolumeName = "somevolumename"
@@ -73,28 +82,226 @@ class MediaStoreActivity : AppCompatActivity() {
         }
     }
 
-    private fun createFileByMediaStore() {
-        val values = ContentValues()
-        values.put(MediaStore.Images.Media.DISPLAY_NAME, "Image.png")
-        values.put(MediaStore.Images.Media.DESCRIPTION, "This is an image")
-        values.put(MediaStore.Images.Media.MIME_TYPE, "image/png")
-        values.put(MediaStore.Images.Media.TITLE, "Image.png")
-        values.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/sl")
-        val external = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-        val insertUri = contentResolver.insert(external, values) ?: return
-
-        contentResolver.openOutputStream(insertUri).use { os ->
+    // 这里说明了沙盒目录下文件的file scheme的uri可以用来读写，而不兼容MediaStore那一套
+    private fun someTest() {
+        val file = File(cacheDir, "test.jpg")
+        FileOutputStream(file).use { os ->
             try {
                 val bitmap = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888)
                 //创建了一个红色的图片
                 val canvas = Canvas(bitmap)
-                canvas.drawColor(Color.RED)
+                canvas.drawColor(0xFF66FFCC.toInt())
                 bitmap.compress(Bitmap.CompressFormat.PNG, 90, os)
                 Timber.e("创建Bitmap成功")
             } catch (e: IOException) {
                 Timber.e("创建失败：${e.message}")
             }
+            os.flush()
         }
+
+        val fileUri = Uri.fromFile(file)
+
+        contentResolver.openFileDescriptor(fileUri, "r").use { pfd ->
+            if (pfd == null) {
+                Timber.e("pfd is null")
+                return@use
+            }
+            BitmapFactory.decodeFileDescriptor(pfd.fileDescriptor)
+
+        }
+
+        contentResolver.openInputStream(fileUri)?.use { input ->
+            BitmapFactory.decodeStream(input)
+        }
+
+        contentResolver.query(fileUri, arrayOf(MediaStore.MediaColumns._ID), null, null, null)
+            .use { cursor ->
+                if (cursor == null) {
+                    Timber.e("cursor is null")
+                    return
+                }
+                cursor.moveToFirst()
+                Timber.e("cursor.getString(0): ${cursor.getString(0)}")
+            }
+    }
+
+    private fun createFileByMediaStore() {
+        val resolver = contentResolver
+        val values = ContentValues()
+        values.put(MediaStore.Images.Media.DISPLAY_NAME, "Image.png")
+        values.put(MediaStore.Images.Media.DESCRIPTION, "This is an image")
+        values.put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+        values.put(MediaStore.Images.Media.TITLE, "Image.png")
+        values.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/suika_test")
+        val external = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        val internal = MediaStore.Images.Media.INTERNAL_CONTENT_URI
+        val insertUri = resolver.insert(external, values) ?: return
+
+        val startTime = System.currentTimeMillis()
+//        val inTime = Completable.create { emitter ->
+
+        val lock = ReentrantLock()
+        val condition = lock.newCondition()
+        val handlerThread = HandlerThread("wait_media_store_sync")
+        handlerThread.start()
+        resolver.registerContentObserver(
+            insertUri,
+            true,
+            object : ContentObserver(Handler(handlerThread.looper)) {
+                // 这个事件的回调不是粘性的，发射以后再注册会无效
+                override fun onChange(selfChange: Boolean, uri: Uri?) {
+                    super.onChange(selfChange, uri)
+                    val spendTime = System.currentTimeMillis() - startTime
+                    Timber.e("spendTime: $spendTime")
+//                    contentResolver.unregisterContentObserver(this)
+                    Timber.e("#1 selfChange: $selfChange")
+                    Timber.e("#1 uri: $uri")
+                    if (uri != insertUri) return
+                    handlerThread.quit()
+//                    emitter.onComplete()
+                    try {
+                        lock.lock()
+                        condition.signalAll()
+                    } finally {
+                        lock.unlock()
+                    }
+                }
+            })
+//        }.subscribeOn(Schedulers.io())
+//            .subscribe()
+//            .blockingAwait(1L, TimeUnit.MILLISECONDS)
+
+        resolver.openOutputStream(insertUri)?.use { os ->
+            try {
+                val bitmap = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888)
+                //创建了一个红色的图片
+                val canvas = Canvas(bitmap)
+                canvas.drawColor(0xFF66FFCC.toInt())
+                bitmap.compress(Bitmap.CompressFormat.PNG, 90, os)
+                Timber.e("创建Bitmap成功")
+            } catch (e: IOException) {
+                Timber.e("创建失败：${e.message}")
+            }
+            os.flush()
+        }
+
+
+        Timber.e("start wait")
+        val awaitTime = System.currentTimeMillis()
+        try {
+            lock.lock()
+            // 返回值为tru表示在timeout之内结束wait（也就是被signal了）
+            val awaitResult = condition.await(200L, TimeUnit.MILLISECONDS)
+            Timber.e("awaitResult: $awaitResult")
+        } finally {
+            lock.unlock()
+        }
+        Timber.e("end wait ${System.currentTimeMillis() - awaitTime}")
+
+        val cSize = MediaStore.MediaColumns.SIZE
+        val cDisplayName = MediaStore.MediaColumns.DISPLAY_NAME
+        val cData = MediaStore.MediaColumns.DATA
+        resolver.query(
+            insertUri,
+            arrayOf(BaseColumns._ID, cSize, cDisplayName, cData),
+            null,
+            null,
+            null
+        )
+            ?.use { cursor ->
+                var size = 0L
+                if (cursor.moveToFirst()) {
+                    Timber.e("has bitmap")
+                    size = cursor.getLong(cursor.getColumnIndex(cSize))
+                    val displayName = cursor.getString(cursor.getColumnIndex(cDisplayName))
+                    val data = cursor.getString(cursor.getColumnIndex(cData))
+
+                    Timber.e("displayName: $displayName")
+                    Timber.e("insertUri: $insertUri")
+                    Timber.e("data: $data")
+                }
+                Timber.e("Create bitmap size is: $size")
+            }
+    }
+
+    class CreateTask : AsyncTask<Void, Void, Int>() {
+        override fun doInBackground(vararg params: Void?): Int {
+            val values = ContentValues()
+            values.put(MediaStore.Images.Media.DISPLAY_NAME, "Image.png")
+            values.put(MediaStore.Images.Media.DESCRIPTION, "This is an image")
+            values.put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+            values.put(MediaStore.Images.Media.TITLE, "Image.png")
+            values.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/suika_test")
+            val external = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            val insertUri = app.contentResolver.insert(external, values) ?: return 0
+
+            app.contentResolver.openOutputStream(insertUri)?.use { os ->
+                try {
+                    val bitmap = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888)
+                    //创建了一个红色的图片
+                    val canvas = Canvas(bitmap)
+                    canvas.drawColor(0xFF66FFCC.toInt())
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 90, os)
+                    Timber.e("创建Bitmap成功")
+                } catch (e: IOException) {
+                    Timber.e("创建失败：${e.message}")
+                }
+                os.flush()
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            val result = contentResolver.refresh(insertUri, null, null)
+//            contentResolver.startSync(insertUri, Bundle())
+//            ContentResolver.requestSync(null, insertUri.authority, null)
+//            Timber.e("refresh result: $result")
+            }
+
+            Completable.create { emitter ->
+                app.contentResolver.registerContentObserver(
+                    insertUri,
+                    true,
+                    object : ContentObserver(Handler()) {
+                        override fun onChange(selfChange: Boolean, uri: Uri?) {
+                            super.onChange(selfChange, uri)
+                            app.contentResolver.unregisterContentObserver(this)
+                            Timber.e("selfChange: $selfChange")
+                            Timber.e("uri: $uri")
+                            if (uri != insertUri) return
+                            emitter.onComplete()
+                        }
+                    })
+            }.blockingAwait()
+
+
+            val cSize = MediaStore.MediaColumns.SIZE
+            val cDisplayName = MediaStore.MediaColumns.DISPLAY_NAME
+            app.contentResolver.query(
+                insertUri,
+                arrayOf(BaseColumns._ID, cSize, cDisplayName),
+                null,
+                null,
+                null
+            )
+                ?.use { cursor ->
+                    var size = 0L
+                    if (cursor.moveToFirst()) {
+                        Timber.e("has bitmap")
+                        size = cursor.getLong(cursor.getColumnIndex(cSize))
+                        val displayName =
+                            cursor.getString(cursor.getColumnIndex(cDisplayName))
+                        Timber.e("displayName: $displayName")
+                        Timber.e("insertUri: $insertUri")
+                    }
+                    Timber.e("Create bitmap size is: $size")
+                }
+            return 1
+        }
+    }
+
+    //这里会崩溃，证明了AsyncTask的doInBackground不是在一个有Looper运转的线程中执行的
+    private fun createFileByMediaStoreAsync() {
+        val asyncTask = CreateTask()
+        asyncTask.execute()
     }
 
     private fun queryFileByMediaStore(displayName: String): Uri? {

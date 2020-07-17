@@ -10,6 +10,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bybutter.mediatest.base.ListActivity
 import com.bybutter.mediatest.bean.Bucket
+import com.bybutter.mediatest.ext.getFullPathFromContentUri
 import com.bybutter.mediatest.ext.load
 import com.facebook.drawee.backends.pipeline.Fresco
 import com.facebook.drawee.backends.pipeline.PipelineDraweeController
@@ -120,6 +121,13 @@ class BucketListActivity : ListActivity<Bucket>() {
 
         ivItem.load(bucket.bucketUri)
         Timber.e("bucket.thumbnailUri: ${bucket.bucketUri}")
+        Timber.e("bucket.bucketUri.authority: ${bucket.bucketUri.authority}")
+        Timber.e(
+            "getFullPathFromContentUri(this, bucket.bucketUri): ${getFullPathFromContentUri(
+                this,
+                bucket.bucketUri
+            )}"
+        )
         holder.itemView.setOnClickListener {
             when (bucket.mediaType) {
                 MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE -> {
