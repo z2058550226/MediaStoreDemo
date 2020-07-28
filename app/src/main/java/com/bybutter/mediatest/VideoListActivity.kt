@@ -42,7 +42,9 @@ class VideoListActivity : ListActivity<Video>() {
             arrayOf(
                 BaseColumns._ID,
                 MediaStore.MediaColumns.DISPLAY_NAME,
-                MediaStore.MediaColumns.SIZE
+                MediaStore.MediaColumns.SIZE,
+                MediaStore.MediaColumns.DATE_ADDED,
+                MediaStore.MediaColumns.DATE_MODIFIED
             ),
             "${MediaStore.MediaColumns.BUCKET_ID}=?",
             arrayOf(bucketId.toString()),
@@ -54,15 +56,20 @@ class VideoListActivity : ListActivity<Video>() {
                 val displayNameColumnIndex =
                     cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
                 val sizeColumnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.SIZE)
+                val dateAddedColumnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATE_ADDED)
+                val dateModifiedColumnIndex =
+                    cursor.getColumnIndex(MediaStore.MediaColumns.DATE_MODIFIED)
 
                 val id = cursor.getLong(idColumnIndex)
                 val displayName = cursor.getString(displayNameColumnIndex)
                 val size = cursor.getLong(sizeColumnIndex)
+                val dateAdded = cursor.getLong(dateAddedColumnIndex)
+                val dateModified = cursor.getLong(dateModifiedColumnIndex)
 
                 dataList += Video(
                     id, displayName,
                     ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
-                    , size
+                    , size, dateAdded, dateModified
                 )
             }
         }
@@ -77,22 +84,11 @@ class VideoListActivity : ListActivity<Video>() {
         val video = dataList[position]
         tvItem.text = "${video.displayName}\n${video.size}"
 
-        val thumbnailBitmap = contentResolver.loadThumbnail(video.uri, Size(480, 480), null)
-        Timber.e("new bitmap: ${video.uri}")
-        Int.MAX_VALUE
-//        val cr = CloseableReference.of(thumbnailBitmap) { it.recycle() }
-//        val controller = Fresco.newDraweeControllerBuilder().apply {
-//            oldController = ivItem.controller
-//            setDataSourceSupplier {
-//                SimpleDataSource.create<CloseableReference<CloseableBitmap>>()
-//            }
+//        val thumbnailBitmap = contentResolver.loadThumbnail(video.uri, Size(480, 480), null)
+//        Timber.e("new bitmap: ${video.uri}")
+//        ivItem.setImageBitmap(thumbnailBitmap)
 
-//        }.build()
-
-//        ivItem.setImageURI(loadThumbnail)
-
-
+        ivItem.setImageURI(video.uri)
 //        ivItem.load(video.uri)
-        ivItem.setImageBitmap(thumbnailBitmap)
     }
 }

@@ -30,6 +30,7 @@
         <activity android:name=".VideoListActivity" />
         <activity android:name=".ImageDisplayActivity" />
         <activity android:name=".PickPictureActivity" />
+        <activity android:name=".SimpleTestActivity" />
     </application>
 
 </manifest>

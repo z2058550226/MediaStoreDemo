@@ -409,6 +409,7 @@ class MediaStoreActivity : AppCompatActivity() {
         Timber.e("data: $data")
     }
 
+
     private fun deleteFileByMediaStore(uri: Uri) {
         contentResolver.delete(uri, null, null)
     }

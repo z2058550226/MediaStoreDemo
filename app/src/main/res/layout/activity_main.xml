@@ -39,13 +39,19 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="imageDisplay"
-            android:text="Image Display Test"/>
+            android:text="Image Display Test" />
 
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="pickPicture"
-            android:text="pick Test"/>
+            android:text="pick Test" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="simpleTest"
+            android:text="simple Test" />
     </LinearLayout>
 
 

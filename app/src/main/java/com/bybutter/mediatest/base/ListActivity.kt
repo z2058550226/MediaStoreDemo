@@ -2,11 +2,14 @@ package com.bybutter.mediatest.base
 
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 
 abstract class ListActivity<T> : AppCompatActivity() {
+    @get:LayoutRes
     abstract val itemLayout: Int
+
     protected open fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
         VH(layoutInflater.inflate(itemLayout, parent, false))
 
