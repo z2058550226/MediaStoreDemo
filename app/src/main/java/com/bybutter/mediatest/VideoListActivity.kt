@@ -7,11 +7,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.BaseColumns
 import android.provider.MediaStore
-import android.util.Size
+import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bybutter.mediatest.base.ListActivity
 import com.bybutter.mediatest.bean.Video
+import com.bybutter.mediatest.ext.insertVideoToMediaStore
+import com.bybutter.mediatest.ext.saveToUri
 import com.facebook.drawee.view.SimpleDraweeView
 import kotlinx.android.synthetic.main.activity_list.*
 import timber.log.Timber
@@ -67,9 +70,12 @@ class VideoListActivity : ListActivity<Video>() {
                 val dateModified = cursor.getLong(dateModifiedColumnIndex)
 
                 dataList += Video(
-                    id, displayName,
-                    ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
-                    , size, dateAdded, dateModified
+                    id,
+                    displayName,
+                    ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id),
+                    size,
+                    dateAdded,
+                    dateModified
                 )
             }
         }
@@ -80,7 +86,7 @@ class VideoListActivity : ListActivity<Video>() {
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: VH, position: Int) {
         val tvItem: TextView = holder.itemView.findViewById(R.id.tv_item)
-        val ivItem: SimpleDraweeView = holder.itemView.findViewById(R.id.iv_item)
+        val ivItem: ImageView = holder.itemView.findViewById(R.id.iv_item)
         val video = dataList[position]
         tvItem.text = "${video.displayName}\n${video.size}"
 
@@ -90,5 +96,17 @@ class VideoListActivity : ListActivity<Video>() {
 
         ivItem.setImageURI(video.uri)
 //        ivItem.load(video.uri)
+
+        holder.itemView.setOnClickListener {
+            val uri = "suika_${System.currentTimeMillis()}.mp4".insertVideoToMediaStore()
+            val currentUri =
+                ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, video.id)
+            if (uri == null) {
+                Timber.e("insert fail")
+                return@setOnClickListener
+            }
+            currentUri.saveToUri(uri)
+            Toast.makeText(app, "save finished", Toast.LENGTH_SHORT).show()
+        }
     }
 }

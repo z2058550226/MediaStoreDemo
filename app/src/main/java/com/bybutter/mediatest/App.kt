@@ -7,6 +7,8 @@ import timber.log.Timber
 
 lateinit var app: App
 
+val contentResolver by lazy { app.contentResolver }
+
 class App : Application() {
     override fun onCreate() {
         super.onCreate()

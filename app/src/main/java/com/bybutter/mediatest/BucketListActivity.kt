@@ -6,18 +6,12 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.BaseColumns
 import android.provider.MediaStore
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bybutter.mediatest.base.ListActivity
 import com.bybutter.mediatest.bean.Bucket
-import com.bybutter.mediatest.ext.getFullPathFromContentUri
 import com.bybutter.mediatest.ext.load
-import com.facebook.drawee.backends.pipeline.Fresco
-import com.facebook.drawee.backends.pipeline.PipelineDraweeController
-import com.facebook.drawee.view.SimpleDraweeView
-import com.facebook.imagepipeline.common.ImageDecodeOptions
-import com.facebook.imagepipeline.common.ResizeOptions
-import com.facebook.imagepipeline.request.ImageRequestBuilder
 import kotlinx.android.synthetic.main.activity_bucket_list.*
 import timber.log.Timber
 
@@ -31,8 +25,11 @@ class BucketListActivity : ListActivity<Bucket>() {
         rv.adapter = Adapter()
     }
 
+    private val a get() = ""
+    val b :String by ::a
+
     private fun queryFolder() {
-        val bucketIdSet = mutableSetOf<Long>()
+        val bucketIdSet = mutableSetOf<String?>()
 
         fun queryBucket(uri: Uri) {
             contentResolver.query(
@@ -41,18 +38,19 @@ class BucketListActivity : ListActivity<Bucket>() {
                     BaseColumns._ID,
                     MediaStore.MediaColumns.BUCKET_ID,
                     MediaStore.MediaColumns.BUCKET_DISPLAY_NAME,
-                    MediaStore.Files.FileColumns.MEDIA_TYPE
+                    MediaStore.Files.FileColumns.MEDIA_TYPE,
                 ),
                 "${MediaStore.Files.FileColumns.MEDIA_TYPE}=? OR ${MediaStore.Files.FileColumns.MEDIA_TYPE}=?",
                 arrayOf(
                     MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE.toString(),
                     MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO.toString()
                 ),
+//                null,null,
                 "${MediaStore.MediaColumns.DATE_ADDED} DESC"
             )?.use { cursor ->
                 while (cursor.moveToNext()) {
                     val bucketIdColumn = cursor.getColumnIndex(MediaStore.MediaColumns.BUCKET_ID)
-                    val bucketId = cursor.getLong(bucketIdColumn)
+                    val bucketId = cursor.getString(bucketIdColumn)
 
                     if (bucketId in bucketIdSet) continue
                     bucketIdSet += bucketId
@@ -81,7 +79,7 @@ class BucketListActivity : ListActivity<Bucket>() {
                     val mimeType = contentResolver.getType(bucketUri)
 
                     dataList += Bucket(
-                        bucketId, bucketDisplayName,
+                        bucketId.toLong(), bucketDisplayName,
                         bucketUri, mimeType, mediaType
                     )
                 }
@@ -97,7 +95,7 @@ class BucketListActivity : ListActivity<Bucket>() {
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val tvItem: TextView = holder.itemView.findViewById(R.id.tv_item)
-        val ivItem: SimpleDraweeView = holder.itemView.findViewById(R.id.iv_item)
+        val ivItem: ImageView = holder.itemView.findViewById(R.id.iv_item)
 
         val bucket = dataList[position]
 
@@ -122,19 +120,19 @@ class BucketListActivity : ListActivity<Bucket>() {
         ivItem.load(bucket.bucketUri)
         Timber.e("bucket.thumbnailUri: ${bucket.bucketUri}")
         Timber.e("bucket.bucketUri.authority: ${bucket.bucketUri.authority}")
-        Timber.e(
-            "getFullPathFromContentUri(this, bucket.bucketUri): ${getFullPathFromContentUri(
-                this,
-                bucket.bucketUri
-            )}"
-        )
+//        Timber.e(
+//            "getFullPathFromContentUri(this, bucket.bucketUri): ${getFullPathFromContentUri(
+//                this,
+//                bucket.bucketUri
+//            )}"
+//        )
         holder.itemView.setOnClickListener {
             when (bucket.mediaType) {
                 MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE -> {
-                    ImageListActivity.start(this, bucket.id)
+                    ImageListActivity.start(this, bucket.bucketId!!)
                 }
                 MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO -> {
-                    VideoListActivity.start(this, bucket.id)
+                    VideoListActivity.start(this, bucket.bucketId!!)
                 }
             }
         }

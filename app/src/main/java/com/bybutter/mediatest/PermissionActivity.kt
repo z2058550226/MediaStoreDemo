@@ -6,6 +6,8 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import de.hdodenhof.circleimageview.CircleImageView
+import timber.log.Timber
 
 class PermissionActivity : AppCompatActivity() {
     companion object {
@@ -14,15 +16,18 @@ class PermissionActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (ContextCompat.checkSelfPermission(
-                this, Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    this, Manifest.permission.WRITE_EXTERNAL_STORAGE
+        Timber.e("permission activity")
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                Timber.e("#5 request permission")
+                // 需要说明请求权限的理由，这里直接请求
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    REQ_PMS_CODE
                 )
-            ) {
             } else {
+                Timber.e("#4 request permission")
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
@@ -30,6 +35,7 @@ class PermissionActivity : AppCompatActivity() {
                 )
             }
         } else {
+            Timber.e("#2 start main")
             MainActivity.start(this)
             finish()
         }

@@ -52,6 +52,18 @@
             android:layout_height="wrap_content"
             android:onClick="simpleTest"
             android:text="simple Test" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="create file"
+            android:onClick="testCreateFile"/>
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="bucket list 2 for butter cam"
+            android:onClick="bucketList2"/>
     </LinearLayout>
 
 

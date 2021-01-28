@@ -33,18 +33,10 @@ class MediaStoreActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_media_store)
-        someTest()
+//        someTest()
 //        outputAllVolume()
 //        Thread {
-//        createFileByMediaStore()
-//        }.start()
-
-//        createFileByMediaStoreAsync()
-//        val queryUri = queryFileByMediaStore("Image.png")
-//        queryUri?.let { readFileByMediaStore(it) }
-//        queryUri?.let { loadThumbnailByMediaStore(it) }
-
-//        modifyFileByMediaStore()
+        createFileByMediaStore()
     }
 
     private val someVolumeName = "somevolumename"
@@ -64,11 +56,11 @@ class MediaStoreActivity : AppCompatActivity() {
         MediaStore.Images.Media.EXTERNAL_CONTENT_URI to "content://media/external/image/media",
         MediaStore.Images.Media.getContentUri(someVolumeName) to "content://media/$someVolumeName/image/media"
     )
-    private val downloadUri = mapOf(
-        MediaStore.Downloads.INTERNAL_CONTENT_URI to "content://media/internal/downloads",
-        MediaStore.Downloads.EXTERNAL_CONTENT_URI to "content://media/external/downloads",
-        MediaStore.Downloads.getContentUri(someVolumeName) to "content://media/$someVolumeName/download"
-    )
+//    private val downloadUri = mapOf(
+//        MediaStore.Downloads.INTERNAL_CONTENT_URI to "content://media/internal/downloads",
+//        MediaStore.Downloads.EXTERNAL_CONTENT_URI to "content://media/external/downloads",
+//        MediaStore.Downloads.getContentUri(someVolumeName) to "content://media/$someVolumeName/download"
+//    )
     private val fileUri = mapOf(
         MediaStore.Files.getContentUri(someVolumeName) to "content://media/$someVolumeName/file"
     )
