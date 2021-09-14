@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.BaseColumns
 import android.provider.MediaStore
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.contentValuesOf
@@ -16,7 +17,7 @@ import androidx.core.graphics.toColorInt
 import com.bybutter.mediatest.ext.httpClient
 import com.bybutter.mediatest.ext.insertPictureToMediaStore
 import com.bybutter.mediatest.ext.load
-import kotlinx.android.synthetic.main.activity_simple_test.*
+import com.bybutter.mediatest.widget.GlideAvatar
 import okhttp3.Request
 import timber.log.Timber
 import java.io.File
@@ -26,6 +27,8 @@ import java.net.URLConnection
 import kotlin.concurrent.thread
 
 class SimpleTestActivity : AppCompatActivity() {
+    private val gv: GlideAvatar by lazy { findViewById(R.id.gv) }
+    private val iv: ImageView by lazy { findViewById(R.id.iv) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_simple_test)

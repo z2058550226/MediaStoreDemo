@@ -11,12 +11,11 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bybutter.mediatest.base.ListActivity
 import com.bybutter.mediatest.bean.Video
 import com.bybutter.mediatest.ext.insertVideoToMediaStore
 import com.bybutter.mediatest.ext.saveToUri
-import com.facebook.drawee.view.SimpleDraweeView
-import kotlinx.android.synthetic.main.activity_list.*
 import timber.log.Timber
 
 class VideoListActivity : ListActivity<Video>() {
@@ -30,6 +29,7 @@ class VideoListActivity : ListActivity<Video>() {
     }
 
     private val bucketId by lazy { intent.getLongExtra(K_BUCKET_ID, 0L) }
+    private val rv: RecyclerView by lazy { findViewById(R.id.rv) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

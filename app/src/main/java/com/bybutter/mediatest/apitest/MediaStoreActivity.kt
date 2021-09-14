@@ -16,12 +16,12 @@ import android.os.*
 import android.provider.BaseColumns
 import android.provider.MediaStore
 import android.util.Size
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.bybutter.mediatest.R
 import com.bybutter.mediatest.app
 import io.reactivex.rxjava3.core.Completable
-import kotlinx.android.synthetic.main.activity_media_store.*
 import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 
 class MediaStoreActivity : AppCompatActivity() {
+    private val iv: ImageView by lazy { findViewById(R.id.iv) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_media_store)
@@ -56,7 +57,8 @@ class MediaStoreActivity : AppCompatActivity() {
         MediaStore.Images.Media.EXTERNAL_CONTENT_URI to "content://media/external/image/media",
         MediaStore.Images.Media.getContentUri(someVolumeName) to "content://media/$someVolumeName/image/media"
     )
-//    private val downloadUri = mapOf(
+
+    //    private val downloadUri = mapOf(
 //        MediaStore.Downloads.INTERNAL_CONTENT_URI to "content://media/internal/downloads",
 //        MediaStore.Downloads.EXTERNAL_CONTENT_URI to "content://media/external/downloads",
 //        MediaStore.Downloads.getContentUri(someVolumeName) to "content://media/$someVolumeName/download"

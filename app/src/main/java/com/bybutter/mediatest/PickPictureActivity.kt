@@ -4,8 +4,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.activity_pick_picture.*
 import java.io.InputStream
 
 
@@ -13,6 +13,8 @@ class PickPictureActivity : AppCompatActivity() {
     companion object {
         const val INTENT_SELECT_PHOTO = 0x123
     }
+
+    private val btn_pick: Button by lazy { findViewById(R.id.btn_pick) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

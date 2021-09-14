@@ -37,4 +37,5 @@ class MainActivity : AppCompatActivity() {
     fun simpleTest(view: View) = start(SimpleTestActivity::class)
     fun testCreateFile(view: View) = start(CreateFileActivity::class)
     fun bucketList2(view: View) = start(BucketListActivity2::class)
+    fun imagePriview(view: View) = start(ImagePreviewActivity::class)
 }

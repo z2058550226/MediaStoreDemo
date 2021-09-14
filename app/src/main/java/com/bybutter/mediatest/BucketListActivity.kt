@@ -9,14 +9,15 @@ import android.provider.MediaStore
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bybutter.mediatest.base.ListActivity
 import com.bybutter.mediatest.bean.Bucket
 import com.bybutter.mediatest.ext.load
-import kotlinx.android.synthetic.main.activity_bucket_list.*
 import timber.log.Timber
 
 @SuppressLint("SetTextI18n")
 class BucketListActivity : ListActivity<Bucket>() {
+    private val rv: RecyclerView by lazy { findViewById(R.id.rv) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bucket_list)
@@ -26,7 +27,7 @@ class BucketListActivity : ListActivity<Bucket>() {
     }
 
     private val a get() = ""
-    val b :String by ::a
+    val b: String by ::a
 
     private fun queryFolder() {
         val bucketIdSet = mutableSetOf<String?>()

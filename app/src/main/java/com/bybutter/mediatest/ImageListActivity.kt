@@ -10,11 +10,10 @@ import android.provider.MediaStore
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bybutter.mediatest.base.ListActivity
 import com.bybutter.mediatest.bean.Image
 import com.bybutter.mediatest.ext.load
-import com.facebook.drawee.view.SimpleDraweeView
-import kotlinx.android.synthetic.main.activity_image_list.*
 
 class ImageListActivity : ListActivity<Image>() {
     companion object {
@@ -27,6 +26,7 @@ class ImageListActivity : ListActivity<Image>() {
     }
 
     private val bucketId by lazy { intent.getLongExtra(K_BUCKET_ID, 0L) }
+    private val rv: RecyclerView by lazy { findViewById(R.id.rv) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,7 +60,7 @@ class ImageListActivity : ListActivity<Image>() {
                 val id = cursor.getLong(idColumnIndex)
                 val size = cursor.getLong(sizeColumnIndex)
                 val mimeType = cursor.getString(mimeTypeColumnIndex)
-                
+
                 dataList += Image(
                     id, cursor.getString(displayNameColumnIndex),
                     ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id),
